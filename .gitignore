@@ -62,3 +62,6 @@ build/
 
 # Exclude OS-specific hidden files
 .DS_Store               # macOS metadata
+
+# Ignore token cache file
+token_cache.json
