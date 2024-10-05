@@ -1,0 +1,67 @@
+# Python-related ignores
+*.py[cod]                # Bytecode and compiled Python files
+__pycache__/             # Python cache directory
+*.pyo                    # Optimized Python bytecode
+*.pyd                    # Windows-specific compiled Python files
+*.pdb                    # Python debug files
+
+# Virtual environment
+.venv/
+env/
+venv/
+
+# Environment variables
+.env
+.env.*
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints
+
+# macOS-specific ignores
+.DS_Store
+
+# Windows-specific ignores
+Thumbs.db
+desktop.ini
+
+# Logs
+*.log
+*.out
+*.err
+logs/
+log/
+
+# Docker-related ignores
+docker-compose.override.yml # Docker Compose override files
+*.log                       # Docker logs
+docker/.env                 # Docker environment variables
+docker-compose.yml           # Optional: Ignore if you don't want it in the repo
+docker-compose.override.yml
+
+# VS Code-related ignores
+.vscode/                # VS Code workspace settings
+*.code-workspace
+
+# Chrome extension-related ignores
+*.pem                   # Private key for Chrome extension packaging
+*.zip                   # Ignore zipped extension package
+
+# Node.js-related (if you're using npm for Chrome extension)
+node_modules/
+package-lock.json
+npm-debug.log
+
+# Chrome extension build output (if you have a build folder)
+build/
+
+# Other common system files
+*.bak                   # Backup files
+*.swp                   # Vi swap files
+*.swo                   # Vi temporary files
+*.tmp                   # Temporary files
+
+# Exclude OS-specific hidden files
+.DS_Store               # macOS metadata
+
+# Ignore token cache file
+token_cache.json
