@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Outlook Job Tracker</title>
+  <style>
+    body {
+      font-family: 'Poppins', sans-serif;
+      background-color: #f0f4f8;
+      color: #333;
+      padding: 20px;
+      width: 380px;
+      border-radius: 12px;
+      box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+      background-image: linear-gradient(145deg, #f0f4f8, #dce0e5);
+      transition: all 0.3s ease;
+      position: relative;
+    }
+
+    body:hover {
+      box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
+      transform: translateY(-5px);
+    }
+
+    /* Close Button */
+    .close-btn {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      background-color: #ff4040;
+      border: none;
+      color: white;
+      font-size: 14px;  /* Smaller size */
+      font-weight: bold;
+      padding: 3px 8px;  /* Smaller padding */
+      border-radius: 50%;
+      cursor: pointer;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      transition: background-color 0.3s ease;
+    }
+
+    .close-btn:hover {
+      background-color: #ff7070;
+    }
+
+    /* Logo Styling (smaller size) */
+    .logo {
+      position: absolute;
+      left: 0;
+      top: 8px;
+      height: 30px; /* Smaller logo size */
+      animation: slideIn 2s forwards;
+    }
+
+    /* Title Styling with Gradient */
+    h2 {
+      color: transparent;
+      background-image: linear-gradient(to right, #1a73e8, #ffffff);
+      -webkit-background-clip: text;
+      background-clip: text;
+      font-size: 26px;
+      margin-bottom: 20px;
+      text-align: center;
+      letter-spacing: 1.5px;
+      text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.1);
+      position: relative;
+      overflow: hidden;
+      white-space: nowrap;
+      animation: titleSlide 2s forwards;
+    }
+
+    @keyframes titleSlide {
+      0% {
+        transform: translateX(-100%);
+      }
+      100% {
+        transform: translateX(0);
+      }
+    }
+
+    @keyframes slideIn {
+      0% {
+        transform: translateX(-100%);
+      }
+      100% {
+        transform: translateX(0);
+      }
+    }
+
+    /* Table Styling */
+    table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 10px;
+      margin-top: 20px;
+    }
+
+    table, th, td {
+      padding: 10px;
+      text-align: center;
+      border-radius: 8px;
+      font-size: 12px;
+    }
+
+    th {
+      background-color: #1a73e8;
+      color: white;
+      font-size: 14px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    td {
+      background-color: #ffffff;
+      color: #333;
+      font-size: 12px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      width: 33%;
+    }
+
+    td:first-child, th:first-child {
+      border-top-left-radius: 8px;
+      border-bottom-left-radius: 8px;
+    }
+
+    td:last-child, th:last-child {
+      border-top-right-radius: 8px;
+      border-bottom-right-radius: 8px;
+    }
+
+    .no-info {
+      color: #ff4040;
+      font-size: 16px;
+      text-align: center;
+      padding: 20px;
+      background-color: #fef3f2;
+      border: 1px solid #ff4040;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(255, 64, 64, 0.1);
+    }
+  </style>
+</head>
+<body>
+  <img src="batman_logo.png" alt="Logo" class="logo"> <!-- Smaller logo -->
+  <h2>Outlook Job Tracker</h2>
+  <button class="close-btn">X</button>
+  <div id="status"></div>
+  <script src="popup.js"></script> <!-- External script to avoid inline JS -->
+</body>
+</html>
