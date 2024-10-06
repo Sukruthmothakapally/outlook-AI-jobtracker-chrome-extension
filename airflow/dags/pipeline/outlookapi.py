@@ -5,6 +5,7 @@ from msal import PublicClientApplication
 import requests
 from datetime import datetime, timedelta
 from dotenv import load_dotenv
+import ast
 
 # Load environment variables from .env file
 load_dotenv()
@@ -13,6 +14,14 @@ load_dotenv()
 app_id = os.getenv('app_id')
 SCOPES = os.getenv('SCOPES')
 TOKEN_FILE = os.getenv('TOKEN_FILE')
+
+if isinstance(SCOPES, str):
+    try:
+        # Safely evaluate the string to convert it into a Python list
+        SCOPES = ast.literal_eval(SCOPES)
+    except ValueError:
+        # Fallback to splitting by comma in case the SCOPES are comma-separated
+        SCOPES = SCOPES.split(",")
 
 client = PublicClientApplication(
     client_id=app_id

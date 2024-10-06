@@ -1,30 +1,62 @@
 services:
   airflow-webserver:
-    image: apache/airflow:2.6.2
-    env_file: ../.env  # Load environment variables from .env file
+    image: apache/airflow:2.6.2-python3.10
+    env_file: ../.env
     environment:
       - AIRFLOW__CORE__EXECUTOR=LocalExecutor
       - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=postgresql+psycopg2://${DB_USERNAME}:${DB_PASSWORD}@${DB_HOST_NAME}/${MAINTENANCE_DB}
-      - AIRFLOW__CORE__LOAD_EXAMPLES=true  # Set to "false" if you don't want example DAGs
+      - AIRFLOW__CORE__LOAD_EXAMPLES=true
+      # Webserver specific configurations
+      - AIRFLOW__WEBSERVER__WORKERS=1
+      - AIRFLOW__WEBSERVER__WORKER_CLASS=sync
+      - AIRFLOW__WEBSERVER__WORKER_TIMEOUT=300
+      - GUNICORN_CMD_ARGS="--timeout 300 --workers 1"
     volumes:
-      - ./dags:/opt/airflow/dags
-      - ./logs:/opt/airflow/logs
-      - ./plugins:/opt/airflow/plugins
+      - ../airflow/dags:/opt/airflow/dags
+      - ../airflow/logs:/opt/airflow/logs
+      - ../airflow/plugins:/opt/airflow/plugins
     ports:
       - "8080:8080"
-    command: ["webserver"]
+    restart: always
+    command: bash -c "airflow db init && airflow users create -r Admin -u admin -p admin -e admin@example.com -f admin -l admin && airflow webserver"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      airflow-scheduler:
+        condition: service_started
 
   airflow-scheduler:
-    image: apache/airflow:2.6.2
+    image: apache/airflow:2.6.2-python3.10
     env_file: ../.env
     environment:
       - AIRFLOW__CORE__EXECUTOR=LocalExecutor
       - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=postgresql+psycopg2://${DB_USERNAME}:${DB_PASSWORD}@${DB_HOST_NAME}/${MAINTENANCE_DB}
     volumes:
-      - ./dags:/opt/airflow/dags
-      - ./logs:/opt/airflow/logs
-      - ./plugins:/opt/airflow/plugins
-    command: ["scheduler"]
+      - ../airflow/dags:/opt/airflow/dags
+      - ../airflow/logs:/opt/airflow/logs
+      - ../airflow/plugins:/opt/airflow/plugins
+    restart: always
+    command: scheduler
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  postgres:
+    image: postgres:13
+    environment:
+      - POSTGRES_USER=${DB_USERNAME}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - POSTGRES_DB=${MAINTENANCE_DB}
+    volumes:
+      - postgres-db-volume:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: always
+    ports:
+      - "5432:5432"
 
 volumes:
-  postgres-db-volume: {}
+  postgres-db-volume:
