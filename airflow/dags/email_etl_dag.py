@@ -2,10 +2,15 @@
 from airflow import DAG
 from airflow.operators.python_operator import PythonOperator
 from airflow.utils.dates import days_ago
+from datetime import timedelta
+import sys
+import os
+sys.path.append(os.path.join(os.path.dirname(__file__), 'pipeline'))
+
 from pipeline.outlookapi import fetch_emails_last_24_hours
 from pipeline.gpt_processing_emails import extract_job_application_emails, trim_email_context
 from pipeline.insert_to_db import process_and_insert_applications
-from datetime import timedelta
+
 
 # Define the default arguments for the DAG
 default_args = {
