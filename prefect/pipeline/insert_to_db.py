@@ -3,8 +3,8 @@ import psycopg2
 from psycopg2 import sql
 from dotenv import load_dotenv
 
-from gpt_processing_emails import extract_job_application_emails
-from outlookapi import fetch_emails_last_24_hours
+from pipeline.gpt_processing_emails import extract_job_application_emails
+from pipeline.outlookapi import fetch_emails_last_24_hours
 
 # Load environment variables from .env file
 load_dotenv()

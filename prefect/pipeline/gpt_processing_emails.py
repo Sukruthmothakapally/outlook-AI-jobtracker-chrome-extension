@@ -2,7 +2,7 @@ import openai
 import os
 from dotenv import load_dotenv
 import json
-from outlookapi import fetch_emails_last_24_hours  # Importing the function from outlookapi.py
+from pipeline.outlookapi import fetch_emails_last_24_hours  # Importing the function from outlookapi.py
 
 # Load environment variables from .env file
 load_dotenv()

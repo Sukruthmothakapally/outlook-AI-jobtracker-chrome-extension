@@ -2,18 +2,27 @@ import os
 import json
 import requests
 from msal import PublicClientApplication
-import requests
 from datetime import datetime, timedelta
 from dotenv import load_dotenv
 import ast
 
+# Get the directory where this script is located
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+
 # Load environment variables from .env file
-load_dotenv()
+load_dotenv(os.path.join(SCRIPT_DIR, '.env'))
 
 # PostgreSQL connection parameters
 app_id = os.getenv('app_id')
 SCOPES = os.getenv('SCOPES')
-TOKEN_FILE = os.getenv('TOKEN_FILE')
+
+# Set TOKEN_FILE path relative to this script's location if not set in environment
+TOKEN_FILE = os.getenv('TOKEN_FILE') or os.path.join(SCRIPT_DIR, 'token_cache.json')
+
+# Print debug information
+print(f"Script directory: {SCRIPT_DIR}")
+print(f"Token file path: {TOKEN_FILE}")
+print(f"Token file exists: {os.path.exists(TOKEN_FILE)}")
 
 if isinstance(SCOPES, str):
     try:
@@ -29,15 +38,23 @@ client = PublicClientApplication(
 
 def get_stored_tokens():
     """Retrieve tokens from the token cache file if available."""
-    if os.path.exists(TOKEN_FILE):
-        with open(TOKEN_FILE, 'r') as f:
-            return json.load(f)
+    try:
+        if os.path.exists(TOKEN_FILE):
+            with open(TOKEN_FILE, 'r') as f:
+                return json.load(f)
+    except Exception as e:
+        print(f"Error reading token file: {e}")
+        print(f"Attempted to read from: {TOKEN_FILE}")
     return None
 
 def store_tokens(token_data):
     """Store tokens to the token cache file."""
-    with open(TOKEN_FILE, 'w') as f:
-        json.dump(token_data, f)
+    try:
+        with open(TOKEN_FILE, 'w') as f:
+            json.dump(token_data, f)
+    except Exception as e:
+        print(f"Error writing token file: {e}")
+        print(f"Attempted to write to: {TOKEN_FILE}")
 
 def get_access_token():
     """Retrieve a valid access token, refresh if needed."""
@@ -74,9 +91,8 @@ def get_access_token():
     
     raise Exception(f"Error acquiring access token: {result.get('error_description', 'Unknown error')}")
 
-
 def fetch_emails_last_24_hours():
-    """Fetch and store up to 50 emails from the last 24 hours in a text file, with a counter."""
+    """Fetch and store up to 50 emails from the last 24 hours and return as a string with a counter."""
     access_token = get_access_token()
     if access_token:
         # Calculate the timestamp for 24 hours ago in the correct format for Microsoft Graph
@@ -98,26 +114,23 @@ def fetch_emails_last_24_hours():
             email_text_data = f"Total Emails Fetched: {email_count}\n"
             email_text_data += "-" * 50 + "\n"  # Separator for the email count
 
-            # Write the email data to a text file and simultaneously store it in a string
-            with open("emails_last_24_hours.txt", "w", encoding="utf-8") as file:
-                file.write(email_text_data)
-                for email in emails.get('value', []):  # Iterate over each email in the 'value' field
-                    email_details = (
-                        f"Subject: {email.get('subject', 'No Subject')}\n"
-                        f"From: {email.get('from', {}).get('emailAddress', {}).get('address', 'Unknown')}\n"
-                        f"Received: {email.get('receivedDateTime', 'Unknown')}\n"
-                        f"Body Preview: {email.get('bodyPreview', 'No Preview')}\n"
-                        + "-" * 50 + "\n"  # Separator for each email
-                    )
-                    file.write(email_details)
-                    email_text_data += email_details
+            # Store the email data in a string
+            for email in emails.get('value', []):  # Iterate over each email in the 'value' field
+                email_details = (
+                    f"Subject: {email.get('subject', 'No Subject')}\n"
+                    f"From: {email.get('from', {}).get('emailAddress', {}).get('address', 'Unknown')}\n"
+                    f"Received: {email.get('receivedDateTime', 'Unknown')}\n"
+                    f"Body Preview: {email.get('bodyPreview', 'No Preview')}\n"
+                    + "-" * 50 + "\n"  # Separator for each email
+                )
+                email_text_data += email_details
 
             return email_text_data
             
         else:
-            print("Error:", response.status_code, response.json())  # Print error details
+            return f"Error: {response.status_code}, {response.json()}"  # Return error details
     else:
-        print("Error: Could not acquire an access token.")
+        return "Error: Could not acquire an access token."
 
 if __name__ == "__main__":
     print(fetch_emails_last_24_hours())
