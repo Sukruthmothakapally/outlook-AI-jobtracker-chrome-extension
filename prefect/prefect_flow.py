@@ -1,8 +1,13 @@
 import os
+import sys
 import logging
 from prefect import flow, task, get_run_logger
 from datetime import timedelta
 import json
+
+# Add the project root to sys.path to allow importing assistant.py from the root
+PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))  # This points to the project root
+sys.path.insert(0, PROJECT_ROOT)
 
 logging.basicConfig(level=logging.INFO)
 global_logger = logging.getLogger(__name__)
