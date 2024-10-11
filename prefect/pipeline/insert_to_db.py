@@ -15,7 +15,7 @@ MAINTENANCE_DB = os.getenv('MAINTENANCE_DB')
 DB_USERNAME = os.getenv('DB_USERNAME')
 DB_PASSWORD = os.getenv('DB_PASSWORD')
 
-def insert_applied_company(company_name, company_website, job_position, applied_date):
+def insert_applied_company(company_name, company_website, job_position, applied_date, application_status):
     """Insert applied company data into the PostgreSQL database."""
     try:
         # Connect to the PostgreSQL database
@@ -27,12 +27,12 @@ def insert_applied_company(company_name, company_website, job_position, applied_
         ) as conn:
             with conn.cursor() as cursor:
                 insert_query = sql.SQL("""
-                    INSERT INTO applied_companies (company_name, company_website, job_position, applied_date)
-                    VALUES (%s, %s, %s, %s)
+                    INSERT INTO applied_companies (company_name, company_website, job_position, applied_date, application_status)
+                    VALUES (%s, %s, %s, %s, %s)
                 """)
-                cursor.execute(insert_query, (company_name, company_website, job_position, applied_date))
+                cursor.execute(insert_query, (company_name, company_website, job_position, applied_date, application_status))
                 conn.commit()  # Commit the transaction
-                print(f"Inserted: {company_name}, {company_website}, {job_position}, {applied_date}")
+                print(f"Inserted: {company_name}, {company_website}, {job_position}, {applied_date}, {application_status}")
     except Exception as e:
         print("Error inserting data:", e)
 
@@ -48,7 +48,8 @@ def process_and_insert_applications(email_context):
             company_website = application.get('company_website')
             job_position = application.get('applied_position')
             applied_date = application.get('applied_timestamp')
-            insert_applied_company(company_name, company_website, job_position, applied_date)
+            application_status = application.get('application_status')
+            insert_applied_company(company_name, company_website, job_position, applied_date, application_status)
         print('All applications successfully inserted.')
     else:
         print("No valid application data found or extracted.")

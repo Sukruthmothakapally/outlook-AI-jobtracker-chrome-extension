@@ -1,22 +1,12 @@
-import openai
-import os
-from dotenv import load_dotenv
 import json
-from pipeline.outlookapi import fetch_emails_last_24_hours  # Importing the function from outlookapi.py
+from pipeline.outlookapi import fetch_emails_last_24_hours 
+import os
+import sys
 
-# Load environment variables from .env file
-load_dotenv()
+PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, PROJECT_ROOT)
 
-# Get OpenAI API Key
-openai_api_key = os.getenv("OPENAI_API_KEY")
-
-if not openai_api_key:
-    raise ValueError("OpenAI API key not found. Make sure it is set in the .env file.")
-
-# Initialize OpenAI API
-client = openai.OpenAI(
-    api_key=openai_api_key,
-)
+from assistant import get_job_application_details
 
 # Define token limits for gpt-3.5
 MODEL_TOTAL_TOKEN_LIMIT = 4096
@@ -51,56 +41,19 @@ def trim_email_context(email_context, token_limit):
     return trimmed_email_context
 
 def extract_job_application_emails(email_context: str):
+    """
+    Main function to extract job application details from email context.
+    This function will call assistant.py to handle the model interaction.
+    """
     try:
-        # Define the prompt to filter emails and extract data
-        prompt = f"""
-        The following is a series of emails. Some of these emails contain acknowledgement messages or thank you notes after a job application. Your task is to extract and return the relevant job application details strictly in JSON format. 
-
-        The output should be a valid JSON object with the following keys:
-        - company_name
-        - company_website
-        - applied_position
-        - applied_timestamp
-
-        If no emails match the requirement, return an empty JSON object like this: {{"applications": []}}.
-
-        The output must be a valid JSON object. Do not include any additional text outside of the JSON object.
-
-        Here is the email context:
-        {email_context}
-        """
-
-        # Call the GPT-4 model using the new `client.chat.completions.create` method
-        response = client.chat.completions.create(
-            model="gpt-3.5-turbo",
-            messages=[
-                {"role": "system", "content": "You are a helpful assistant."},
-                {"role": "user", "content": prompt}
-            ],
-            max_tokens=500,
-            temperature=0.1,
-            response_format={"type": "json_object"}
-        )
-
-        # Extract and return the JSON response from GPT-4
-        response_text = response.choices[0].message.content.strip()
-
-        # Attempt to parse the response as JSON
-        try:
-            json_output = json.loads(response_text)
-            return json_output
-        except json.JSONDecodeError:
-            raise ValueError("Failed to parse GPT response as JSON. Here is the raw output:\n" + response_text)
-
-    except openai.APIError as e:
-        # Handle any OpenAI API errors
-        print(f"OpenAI API error occurred: {e}")
-        return None
+        # Call the function in assistant.py to extract the details
+        extracted_applications = get_job_application_details(email_context)
+        return extracted_applications
+    
     except Exception as e:
-        # Catch all other exceptions
+        # Catch any errors and print them
         print(f"An error occurred: {e}")
         return None
-
 
 if __name__ == "__main__":
     # Fetch the email data from the last 24 hours
