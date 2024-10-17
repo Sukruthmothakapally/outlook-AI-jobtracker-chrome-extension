@@ -1,10 +1,17 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 from urllib.parse import urlparse
 import psycopg2
 import os
 from dotenv import load_dotenv
 from datetime import datetime
+import logging
+
+from LLM_agents.vector_search_agent import perform_similarity_search, generate_openai_response, connect_to_postgres
+
+# Configure logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 load_dotenv()
 
@@ -13,12 +20,15 @@ DB_HOST_NAME = os.getenv('DB_HOST_NAME')
 MAINTENANCE_DB = os.getenv('MAINTENANCE_DB')
 DB_USERNAME = os.getenv('DB_USERNAME')
 DB_PASSWORD = os.getenv('DB_PASSWORD')
-print(f"DB Connection - Host: {DB_HOST_NAME}, DB: {MAINTENANCE_DB}, Username: {DB_USERNAME}")
+logging.info(f"DB Connection - Host: {DB_HOST_NAME}, DB: {MAINTENANCE_DB}, Username: {DB_USERNAME}")
 
 app = FastAPI()
 
 class URLRequest(BaseModel):
     url: str
+
+class UserQueryRequest(BaseModel):
+    query: str
 
 def clean_website_url(url):
     # If the URL doesn't have a scheme (http/https), prepend 'https://'
@@ -35,7 +45,7 @@ def clean_website_url(url):
 
     # Return the cleaned base URL (protocol + domain)
     cleaned_url = f"{scheme}://{netloc}"
-    print(f"Cleaned URL: {cleaned_url}")
+    logging.info(f"Cleaned URL: {cleaned_url}")
     return cleaned_url
 
 def connect_to_db():
@@ -46,10 +56,10 @@ def connect_to_db():
             user=DB_USERNAME,
             password=DB_PASSWORD
         )
-        print("Database connection successful.")
+        logging.info("Database connection successful.")
         return conn
     except Exception as e:
-        print(f"Error connecting to database: {e}")
+        logging.error(f"Error connecting to database: {e}")
         return None
 
 def format_applied_date(applied_date):
@@ -71,13 +81,13 @@ def format_applied_date(applied_date):
 
 @app.post("/check-url")
 async def check_url(request: URLRequest):
-    print(f"Received URL: {request.url}")
+    logging.info(f"Received URL: {request.url}")
     cleaned_url = clean_website_url(request.url)  # Clean the input URL
     company_website = urlparse(cleaned_url).netloc  # Extract the domain
 
     conn = connect_to_db()
     if conn is None:
-        print("Failed to connect to the database.")
+        logging.error("Failed to connect to the database.")
         raise HTTPException(status_code=500, detail="Unable to connect to the database.")
 
     try:
@@ -88,7 +98,7 @@ async def check_url(request: URLRequest):
             WHERE company_website = %s
             ORDER BY applied_date DESC;
             """
-            print(f"Executing query for: {cleaned_url}")
+            logging.info(f"Executing query for: {cleaned_url}")
             cursor.execute(query, (cleaned_url,))
             results = cursor.fetchall()  # Fetch all matching rows
 
@@ -116,7 +126,34 @@ async def check_url(request: URLRequest):
                 "company_website": company_website
             }
     except Exception as e:
-        print(f"Query execution error: {e}")
+        logging.error(f"Query execution error: {e}")
         raise HTTPException(status_code=500, detail=f"Error fetching data: {e}")
     finally:
         conn.close()
+
+@app.post("/get_user_query")
+async def get_user_query(request: UserQueryRequest):
+    user_query = request.query
+    logging.info(f"Received user query: {user_query}")
+
+    # Step 1: Connect to the database
+    conn = connect_to_postgres()
+    if conn is None:
+        raise HTTPException(status_code=500, detail="Unable to connect to the database.")
+
+    try:
+        # Step 2: Perform similarity search
+        result = perform_similarity_search(conn, user_query)
+        
+        if result:
+            # Step 3: Generate a streaming response using OpenAI GPT-3.5
+            return StreamingResponse(generate_openai_response(user_query, result), media_type="text/plain")
+        else:
+            return {"message": "No similar company found for the query."}
+    except Exception as e:
+        logging.error(f"Error in handling query: {e}")
+        raise HTTPException(status_code=500, detail=f"Error processing the query: {e}")
+    finally:
+        if conn:
+            conn.close()
+            logging.info("Database connection closed.")

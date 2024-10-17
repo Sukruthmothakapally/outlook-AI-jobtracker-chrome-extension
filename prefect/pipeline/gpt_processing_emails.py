@@ -1,19 +1,23 @@
 import json
-from pipeline.outlookapi import fetch_emails_last_24_hours 
+from pipeline.outlookapi import fetch_emails_last_24_hours
 import os
 import sys
+import logging
+
+# Configure logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, PROJECT_ROOT)
 
-from assistant import get_job_application_details
+from LLM_agents.email_assistant import get_job_application_details
 
 # Define token limits for gpt-3.5
 MODEL_TOTAL_TOKEN_LIMIT = 4096
 INPUT_TOKEN_LIMIT = 3500  # Limit for the input (email_context)
-OUTPUT_TOKEN_ALLOCATION = MODEL_TOTAL_TOKEN_LIMIT - INPUT_TOKEN_LIMIT 
+OUTPUT_TOKEN_ALLOCATION = MODEL_TOTAL_TOKEN_LIMIT - INPUT_TOKEN_LIMIT
 
-#for gpt-4o -> token limit is 30k. so input=29k and output-1k ideal
+# For gpt-4o -> token limit is 30k. So input=29k and output-1k ideal
 
 # Function to estimate the number of tokens in the text (rough estimation)
 def estimate_token_count(text):
@@ -29,7 +33,7 @@ def trim_email_context(email_context, token_limit):
         return email_context
 
     # If it exceeds the limit, start trimming from the end
-    print(f"Email context exceeds token limit. Trimming to {token_limit} tokens.")
+    logging.info(f"Email context exceeds token limit. Trimming to {token_limit} tokens.")
     words = email_context.split()
 
     # Estimate the number of words that can fit within the token limit
@@ -51,8 +55,8 @@ def extract_job_application_emails(email_context: str):
         return extracted_applications
     
     except Exception as e:
-        # Catch any errors and print them
-        print(f"An error occurred: {e}")
+        # Catch any errors and log them
+        logging.error(f"An error occurred: {e}")
         return None
 
 if __name__ == "__main__":
@@ -60,17 +64,17 @@ if __name__ == "__main__":
     email_context = fetch_emails_last_24_hours()
 
     if email_context:
-
         # Check and trim email context if necessary (limit to 3500 tokens)
         email_context = trim_email_context(email_context, INPUT_TOKEN_LIMIT)
 
         # Call the GPT function with the fetched email data and enforce JSON output
         result = extract_job_application_emails(email_context)
 
-        # Print the result
+        # Log the result
         if result:
-            print(json.dumps(result, indent=4))
+            logging.info("Job application details extracted successfully.")
+            logging.info(json.dumps(result, indent=4))
         else:
-            print("No valid job application data found or an error occurred.")
+            logging.warning("No valid job application data found or an error occurred.")
     else:
-        print("No emails fetched or an error occurred while fetching emails.")
+        logging.warning("No emails fetched or an error occurred while fetching emails.")

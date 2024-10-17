@@ -5,6 +5,10 @@ from msal import PublicClientApplication
 from datetime import datetime, timedelta
 from dotenv import load_dotenv
 import ast
+import logging
+
+# Configure logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 # Get the directory where this script is located
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -19,10 +23,10 @@ SCOPES = os.getenv('SCOPES')
 # Set TOKEN_FILE path relative to this script's location if not set in environment
 TOKEN_FILE = os.getenv('TOKEN_FILE') or os.path.join(SCRIPT_DIR, 'token_cache.json')
 
-# Print debug information
-print(f"Script directory: {SCRIPT_DIR}")
-print(f"Token file path: {TOKEN_FILE}")
-print(f"Token file exists: {os.path.exists(TOKEN_FILE)}")
+# Log debug information
+logging.info(f"Script directory: {SCRIPT_DIR}")
+logging.info(f"Token file path: {TOKEN_FILE}")
+logging.info(f"Token file exists: {os.path.exists(TOKEN_FILE)}")
 
 if isinstance(SCOPES, str):
     try:
@@ -43,8 +47,8 @@ def get_stored_tokens():
             with open(TOKEN_FILE, 'r') as f:
                 return json.load(f)
     except Exception as e:
-        print(f"Error reading token file: {e}")
-        print(f"Attempted to read from: {TOKEN_FILE}")
+        logging.error(f"Error reading token file: {e}")
+        logging.error(f"Attempted to read from: {TOKEN_FILE}")
     return None
 
 def store_tokens(token_data):
@@ -53,8 +57,8 @@ def store_tokens(token_data):
         with open(TOKEN_FILE, 'w') as f:
             json.dump(token_data, f)
     except Exception as e:
-        print(f"Error writing token file: {e}")
-        print(f"Attempted to write to: {TOKEN_FILE}")
+        logging.error(f"Error writing token file: {e}")
+        logging.error(f"Attempted to write to: {TOKEN_FILE}")
 
 def get_access_token():
     """Retrieve a valid access token, refresh if needed."""
@@ -76,9 +80,9 @@ def get_access_token():
                 return result['access_token']
     
     # If no valid tokens, prompt user to log in and get new tokens
-    print("Fetching new authorization code... Visit this URL:")
+    logging.info("Fetching new authorization code... Visit this URL:")
     authorization_url = client.get_authorization_request_url(SCOPES)
-    print(authorization_url)
+    logging.info(authorization_url)
 
     authorization_code = input("Enter the authorization code from the URL: ")
 
@@ -133,4 +137,4 @@ def fetch_emails_last_24_hours():
         return "Error: Could not acquire an access token."
 
 if __name__ == "__main__":
-    print(fetch_emails_last_24_hours())
+    logging.info(fetch_emails_last_24_hours())

@@ -1,7 +1,8 @@
 import os
 import sys
 import logging
-from prefect import flow, task, get_run_logger
+from prefect import flow, task
+from prefect.logging import get_run_logger
 from datetime import timedelta
 import json
 
@@ -18,8 +19,9 @@ os.environ['TOKEN_FILE'] = os.path.join(PIPELINE_DIR, "token_cache.json")
 
 from pipeline.outlookapi import fetch_emails_last_24_hours
 from pipeline.gpt_processing_emails import extract_job_application_emails
-from pipeline.insert_to_db import process_and_insert_applications
+from pipeline.insert_to_db import process_applications, process_embeddings, get_db_connection
 
+# Task 1: Fetch Emails Task
 @task(name="Fetch Emails", retries=3, retry_delay_seconds=60)
 def fetch_emails_task():
     """Task to fetch emails from Outlook"""
@@ -31,12 +33,15 @@ def fetch_emails_task():
     try:
         logger.info("Fetching emails from Outlook for the last 24 hours.")
         emails = fetch_emails_last_24_hours()
-        logger.info(f"Successfully fetched emails.")
+        if not emails:  # Raise exception if no emails were fetched
+            raise ValueError("No emails were fetched from Outlook.")
+        logger.info("Successfully fetched emails.")
         return emails
     except Exception as e:
         logger.error(f"Failed to fetch emails: {e}")
-        raise
+        raise  # Ensure the task fails
 
+# Task 2: Process Emails Task
 @task(name="Process Emails with LLM")
 def process_emails_task(email_context):
     """Task to process emails with LLM"""
@@ -44,17 +49,20 @@ def process_emails_task(email_context):
 
     if email_context:
         try:
-            logger.info(f"Processing emails with LLM.")
+            logger.info("Processing emails with LLM.")
             processed_emails = extract_job_application_emails(email_context)
-            logger.info(f"Successfully processed emails with LLM")
+            if not processed_emails:  # Raise exception if no processed emails
+                raise ValueError("No processed emails to work with.")
+            logger.info("Successfully processed emails with LLM.")
             return processed_emails
         except Exception as e:
             logger.error(f"Failed to process emails: {e}")
-            raise
+            raise  # Ensure the task fails
     else:
-        logger.warning("No emails to process.")
-    return None
+        logger.error("No email context provided for processing.")
+        raise ValueError("No email context provided for processing.")  # Raise an exception if no context
 
+# Task 3: Insert to Postgres DB Task
 @task(name="Insert to Postgres DB")
 def insert_to_db_task(processed_emails):
     """Task to insert processed data into the database"""
@@ -62,36 +70,101 @@ def insert_to_db_task(processed_emails):
 
     if processed_emails:
         try:
-            # Log the processed data before inserting it
             logger.info("Logging processed data before insertion.")
-            
-            # If data size is manageable, log the entire data in JSON format
             logger.debug(f"Processed Data: {json.dumps(processed_emails, indent=4)}")
 
-            # Insert data into the database
-            logger.info(f"Inserting processed applications into the database.")
-            process_and_insert_applications(processed_emails)
-            logger.info("Successfully inserted processed applications into the database.")
+            conn = get_db_connection()
+
+            if conn:
+                logger.info("Inserting processed applications into the database.")
+                company_data_list = process_applications(conn, processed_emails)
+                conn.commit()
+                conn.close()
+
+                logger.info("Successfully inserted processed applications into the database.")
+                return company_data_list
+            else:
+                logger.error("Failed to connect to the database.")
+                raise ConnectionError("Database connection failed.")  # Ensure the task fails
         except Exception as e:
             logger.error(f"Failed to insert data into the database: {e}")
-            raise
+            raise  # Ensure the task fails
     else:
-        logger.warning("No data to insert into the database.")
+        logger.error("No processed emails available for insertion.")
+        raise ValueError("No processed emails available for insertion.")  # Raise an exception for empty data
 
+# Task 4: Insert Embeddings Task
+@task(name="Insert Embeddings")
+def insert_embeddings_task(company_data_list):
+    """Task to insert embeddings into the database"""
+    logger = get_run_logger()
+
+    if company_data_list:
+        try:
+            conn = get_db_connection()
+
+            if conn:
+                logger.info("Inserting embeddings for companies into the database.")
+                process_embeddings(conn, company_data_list)
+                conn.commit()
+                conn.close()
+
+                logger.info("Successfully inserted embeddings into the database.")
+            else:
+                logger.error("Failed to connect to the database for embedding insertion.")
+                raise ConnectionError("Database connection failed.")  # Ensure the task fails
+        except Exception as e:
+            logger.error(f"Failed to insert embeddings into the database: {e}")
+            raise  # Ensure the task fails
+    else:
+        logger.error("No company data found for inserting embeddings.")
+        raise ValueError("No company data found for inserting embeddings.")  # Raise an exception for empty data
+
+# Main Flow: Job Applications Processing Flow
 @flow(name="Outlook Job Applications Processing Flow")
 def job_applications_flow():
-    # Execute tasks in sequence
     logger = get_run_logger()
     logger.info("Starting Job Applications Processing Flow.")
 
-    email_data = fetch_emails_task()
-    processed_emails = process_emails_task(email_data)
-    insert_to_db_task(processed_emails)
+    # Fetch emails from Outlook
+    email_data_state = fetch_emails_task(return_state=True)
+    
+    if email_data_state.is_completed():
+        email_data = email_data_state.result()
+        if email_data:
+            # Process the fetched emails using LLM
+            processed_emails_state = process_emails_task(email_data, return_state=True)
+            
+            if processed_emails_state.is_completed():
+                processed_emails = processed_emails_state.result()
+                if processed_emails:
+                    # Insert applications into the database and get company data
+                    company_data_list_state = insert_to_db_task(processed_emails, return_state=True)
+                    
+                    if company_data_list_state.is_completed():
+                        company_data_list = company_data_list_state.result()
+                        if company_data_list:
+                            # Insert embeddings for the companies
+                            insert_embeddings_task(company_data_list)
+                        else:
+                            logger.error("No company data to process for embeddings.")
+                            raise ValueError("No company data to process for embeddings.")  # Raise an exception for empty data
+                    else:
+                        logger.error("Failed to insert data into the database.")
+                else:
+                    logger.error("No processed emails to insert into the database.")
+                    raise ValueError("No processed emails to insert into the database.")  # Raise an exception for empty data
+            else:
+                logger.error("Failed to process emails with LLM.")
+        else:
+            logger.error("No emails fetched to process.")
+            raise ValueError("No emails fetched to process.")  # Raise an exception for empty data
+    else:
+        logger.error("Failed to fetch emails.")
 
     logger.info("Job Applications Processing Flow completed.")
 
 if __name__ == "__main__":
-    # Verify token file exists before starting
     token_file = os.path.join(PIPELINE_DIR, "token_cache.json")
     
     if not os.path.exists(token_file):
