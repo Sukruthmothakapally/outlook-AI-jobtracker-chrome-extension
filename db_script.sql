@@ -4,6 +4,7 @@ CREATE TABLE applied_companies (
     company_website VARCHAR(255),
     job_position VARCHAR(255),
     applied_date TIMESTAMP WITH TIME ZONE NOT NULL,
+    application_status text,
     UNIQUE (company_name, job_position)
 );
 
