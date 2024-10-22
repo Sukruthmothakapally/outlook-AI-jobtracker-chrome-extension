@@ -1,0 +1,274 @@
+body {
+    font-family: 'Poppins', sans-serif;
+    background-color: #f0f4f8;
+    color: #333;
+    padding: 40px;
+    width: 600px;
+    border-radius: 16px;
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+    background-image: linear-gradient(145deg, #f0f4f8, #dce0e5);
+    transition: all 0.3s ease;
+    position: relative;
+  }
+
+  body:hover {
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
+    transform: translateY(-5px);
+  }
+
+  .close-btn, .back-btn {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background-color: #ff4040;
+    border: none;
+    color: white;
+    font-size: 14px;
+    font-weight: bold;
+    padding: 3px 8px;
+    border-radius: 50%;
+    cursor: pointer;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    transition: background-color 0.3s ease;
+  }
+
+  .close-btn:hover, .back-btn:hover {
+    background-color: #ff7070;
+  }
+
+  .back-btn {
+    right: 50px; /* Position to the left of the close button */
+  }
+
+  .logo {
+    position: absolute;
+    left: 0;
+    top: 8px;
+    height: 30px;
+    animation: slideIn 2s forwards;
+  }
+
+  h2 {
+    color: transparent;
+    background-image: linear-gradient(to right, #1a73e8, #ffffff);
+    -webkit-background-clip: text;
+    background-clip: text;
+    font-size: 26px;
+    margin-bottom: 20px;
+    text-align: center;
+    letter-spacing: 1.5px;
+    text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.1);
+    position: relative;
+    overflow: hidden;
+    white-space: nowrap;
+    animation: titleSlide 2s forwards;
+  }
+
+  @keyframes titleSlide {
+    0% {
+      transform: translateX(-100%);
+    }
+    100% {
+      transform: translateX(0);
+    }
+  }
+
+  @keyframes slideIn {
+    0% {
+      transform: translateX(-100%);
+    }
+    100% {
+      transform: translateX(0);
+    }
+  }
+
+  /* Table and other content styling remains unchanged */
+  table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 10px;
+    margin-top: 30px;
+  }
+
+  table, th, td {
+    padding: 10px;
+    text-align: center;
+    border-radius: 8px;
+    font-size: 12px;
+  }
+
+  th {
+    background-color: #1a73e8;
+    color: white;
+    font-size: 14px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+
+  td {
+    background-color: #ffffff;
+    color: #333;
+    font-size: 12px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    width: 33%;
+  }
+
+  td:first-child, th:first-child {
+    border-top-left-radius: 8px;
+    border-bottom-left-radius: 8px;
+  }
+
+  td:last-child, th:last-child {
+    border-top-right-radius: 8px;
+    border-bottom-right-radius: 8px;
+  }
+
+  .no-info {
+    color: #ff4040;
+    font-size: 20px;
+    text-align: center;
+    padding: 30px;
+    background-color: #fef3f2;
+    border: 1px solid #ff4040;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(255, 64, 64, 0.1);
+  }
+
+  /* Input form hidden by default */
+  #formContainer {
+    display: none;
+  }
+
+      /* Hide the back button by default */
+  .back-btn {
+    display: none;
+  }
+
+
+  /* Button for "Applied Company Stats" */
+  #showFormButton {
+    display: block;
+    background-color: rgba(26, 115, 232, 0.5); /* Transparent color */
+    color: white;
+    border: 2px solid #1a73e8; /* Border to give it a 3D look */
+    padding: 10px 20px; /* Adjusted padding for smaller size */
+    border-radius: 8px;
+    cursor: pointer;
+    text-align: center;
+    width: auto; /* Make width auto */
+    margin: 30px auto; /* Center the button horizontally */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* 3D effect */
+    transition: background-color 0.3s ease, transform 0.3s ease; /* Transition for hover effect */
+  }
+
+  #showFormButton:hover {
+    background-color: rgba(21, 91, 181, 0.7); /* Darker on hover */
+    transform: translateY(-2px); /* Lift effect on hover */
+  }
+
+
+  /* Loading and response message styling */
+  .response-message {
+    font-size: 14px;
+    color: #333;
+    padding: 20px;
+    background-color: #f3f3f3;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    margin-top: 10px;
+  }
+
+  .loading {
+    color: #1a73e8;
+    font-size: 16px;
+    padding: 10px;
+    text-align: center;
+  } 
+
+  .result-container {
+    overflow-x: auto; /* Enable horizontal scrolling */
+    overflow-y: hidden; /* Prevent vertical scroll if not needed */
+    max-width: 100%; /* Ensure it doesn't exceed the body width */
+    padding: 10px; /* Optional: add padding */
+  }
+
+  #userInput {
+  width: 60%;
+  height: 40px;
+  padding: 0 50px 0 10px;
+  background-color: black; /* Initial background color */
+  color: white; /* Text color */
+  border: 1px solid #1a73e8; /* Border color */
+  border-radius: 20px; /* Rounded edges */
+  font-size: 16px; /* Font size */
+  transition: background-color 0.3s ease; /* Smooth transition */
+  }
+
+  /* Maintain background color when input is focused or filled */
+  #userInput:focus {
+      background-color: black; /* Keep the same background color */
+      outline: none; /* Remove the default outline */
+  }
+
+  /* Optional: If you want to change the background color when typing */
+  #userInput:not(:placeholder-shown) {
+      background-color: black; /* Maintain the same color when not empty */
+  }
+
+
+  /* Reduced size of the arrow button */
+  .arrow-button {
+      background-color: #1a73e8;
+      color: white;
+      border: none;
+      width: 32px;  /* Reduced from 40px */
+      height: 32px; /* Made square and smaller */
+      position: absolute;
+      right: 5px;
+      top: 50%;    /* Center vertically */
+      transform: translateY(-50%); /* Perfect vertical centering */
+      border-radius: 50%; /* Make it perfectly circular */
+      cursor: pointer;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+      transition: background-color 0.3s ease;
+  }
+
+  .arrow-button:hover {
+      background-color: #0e5cb2;
+  }
+
+  #queryForm {
+      position: relative;
+      display: flex;
+      justify-content: center;
+  }
+
+  .input-container {
+      background-color: #f0f0f0;
+      padding: 5px;
+      border-radius: 50%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      width: 70%;
+      max-width: 400px;
+      height: 60px;
+      margin: 20px auto;
+  }
+
+  .loading {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+  .loading img {
+    width: 50px; /* Adjust size as needed */
+    animation: spin 1s linear infinite;
+}
+
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
