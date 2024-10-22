@@ -1,10 +1,9 @@
 document.addEventListener('DOMContentLoaded', function () {
-  // Close button functionality to close the popup window
+  // Previous button handlers remain the same
   document.querySelector('.close-btn').addEventListener('click', function() {
     window.close();
   });
 
-  // Back button functionality to show the previous state
   document.querySelector('.back-btn').addEventListener('click', function() {
     const formContainer = document.getElementById('formContainer');
     const showFormButton = document.getElementById('showFormButton');
@@ -12,88 +11,136 @@ document.addEventListener('DOMContentLoaded', function () {
 
     formContainer.style.display = 'none';
     showFormButton.style.display = 'block';
-    statusDiv.innerHTML = ''; // Clear status message
-    loadJobInfo(); // Load job info again
+    statusDiv.innerHTML = '';
+    loadJobInfo();
   });
 
   const showFormButton = document.getElementById('showFormButton');
   const formContainer = document.getElementById('formContainer');
   const statusDiv = document.getElementById('status');
 
-  // Show form and back button when "Applied Company Stats" button is clicked
   showFormButton.addEventListener('click', function() {
     formContainer.style.display = 'block';
     showFormButton.style.display = 'none';
-    document.querySelector('.back-btn').style.display = 'inline'; // Show the back button
-    statusDiv.innerHTML = ''; // Clear status
+    document.querySelector('.back-btn').style.display = 'inline';
+    statusDiv.innerHTML = '';
   });
 
-  // Back button functionality to show the previous state
   document.querySelector('.back-btn').addEventListener('click', function() {
     formContainer.style.display = 'none';
     showFormButton.style.display = 'block';
-    document.querySelector('.back-btn').style.display = 'none'; // Hide the back button
-    statusDiv.innerHTML = ''; // Clear status message
-    loadJobInfo(); // Load job info again
+    document.querySelector('.back-btn').style.display = 'none';
+    statusDiv.innerHTML = '';
+    loadJobInfo();
   });
 
-  // Handle form submission
+  // Updated form submission handler
   const form = document.getElementById('queryForm');
-  form.addEventListener('submit', function(event) {
+  const resultDiv = document.getElementById('resultDiv');
+
+  form.addEventListener('submit', async function(event) {
     event.preventDefault();
     const userInput = document.getElementById('userInput').value;
+    
     if (userInput) {
-      statusDiv.innerHTML = '<div class="loading">Thinking...</div>';
-      
-      fetch('http://localhost:8000/get_user_query', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ query: userInput }),
-      })
-      .then(response => {
+      try {
+        statusDiv.innerHTML = '<div class="loading">Thinking...</div>';
+        
+        const response = await fetch('http://localhost:8000/get_user_query', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ query: userInput }),
+        });
+
         if (!response.ok) {
           throw new Error('Network response was not ok');
         }
-        statusDiv.innerHTML = ''; // Clear the "Thinking..." message
-        const reader = response.body.getReader();
-        const decoder = new TextDecoder();
-        
-        function readStream() {
-          return reader.read().then(({ done, value }) => {
-            if (done) {
-              return;
-            }
-            const chunk = decoder.decode(value, { stream: true });
-            return typeWriter(chunk).then(readStream);
-          });
-        }
 
-        return readStream();
-      })
-      .catch(error => {
+        statusDiv.innerHTML = '';
+
+        // Get the response data
+        const arrayBuffer = await response.arrayBuffer();
+        const contentType = response.headers.get('content-type');
+
+        // Clear previous results
+        resultDiv.innerHTML = '';
+
+        if (contentType && contentType.includes('image')) {
+          // Convert array buffer to base64
+          const base64String = btoa(
+            new Uint8Array(arrayBuffer)
+              .reduce((data, byte) => data + String.fromCharCode(byte), '')
+          );
+
+          // Create and display the image
+          const img = document.createElement('img');
+          img.src = `data:${contentType};base64,${base64String}`;
+          img.alt = "Generated Chart";
+          img.style.maxWidth = "100%";
+          img.style.height = "auto";
+          img.style.marginTop = "20px";
+          img.style.borderRadius = "8px";
+          img.style.boxShadow = "0 4px 8px rgba(0, 0, 0, 0.1)";
+          
+          resultDiv.appendChild(img);
+          resultDiv.style.display = "block";
+          resultDiv.style.marginTop = "20px";
+          resultDiv.style.textAlign = "center";
+        } else {
+          // Handle JSON response
+          const textDecoder = new TextDecoder('utf-8');
+          const jsonString = textDecoder.decode(arrayBuffer);
+          const data = JSON.parse(jsonString);
+
+          const table = document.createElement('table');
+          
+          // Create table headers
+          const headers = Object.keys(data[0]);
+          const headerRow = document.createElement('tr');
+          headers.forEach(header => {
+            const th = document.createElement('th');
+            th.textContent = header;
+            headerRow.appendChild(th);
+          });
+          table.appendChild(headerRow);
+
+          // Create table rows
+          data.forEach(row => {
+            const tableRow = document.createElement('tr');
+            headers.forEach(header => {
+              const td = document.createElement('td');
+              td.textContent = row[header];
+              tableRow.appendChild(td);
+            });
+            table.appendChild(tableRow);
+          });
+
+          resultDiv.appendChild(table);
+        }
+      } catch (error) {
         console.error('Error in API call:', error);
         statusDiv.innerHTML = '<div class="no-info">Error in processing the request</div>';
-      });
+      }
     } else {
       statusDiv.innerHTML = '<div class="no-info">Please enter a query</div>';
     }
   });
 
-  // Function to simulate typing effect
+  // TypeWriter function remains the same
   function typeWriter(text, index = 0) {
     return new Promise(resolve => {
       if (index < text.length) {
         statusDiv.innerHTML += text.charAt(index);
-        setTimeout(() => typeWriter(text, index + 1).then(resolve), 20); // Adjust the delay here (20ms)
+        setTimeout(() => typeWriter(text, index + 1).then(resolve), 20);
       } else {
         resolve();
       }
     });
   }
 
-  // Load job info on initial load
+  // LoadJobInfo function remains the same
   function loadJobInfo() {
     chrome.storage.local.get(['jobInfo'], function (result) {
       if (result.jobInfo && result.jobInfo.message.includes('Applied for')) {
@@ -123,5 +170,5 @@ document.addEventListener('DOMContentLoaded', function () {
     });
   }
 
-  loadJobInfo(); // Call the function to load job info on initial load
+  loadJobInfo();
 });

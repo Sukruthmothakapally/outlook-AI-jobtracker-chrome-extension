@@ -7,6 +7,9 @@ import logging
 import openai
 import json
 import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+from typing import List, Tuple, Optional
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -50,7 +53,7 @@ def generate_sql_query(user_query: str) -> str:
 
     """Generate an SQL query using OpenAI's GPT-3.5-turbo model based on user query."""
     prompt = f"""
-    You are an AI assistant skilled in converting natural language queries to SQL.
+    You are an AI assistant skilled in converting natural language queries to SQL and suggesting relevant chart types for visualizations when requested. 
     The database has a table named 'applied_companies' with the following structure:
 
     CREATE TABLE applied_companies (
@@ -71,24 +74,28 @@ def generate_sql_query(user_query: str) -> str:
     5. Ensure that all fields used in the query exist in the provided table structure.
     6. Check the correctness of the SQL and optimize query performance where possible.
 
+    In addition to generating the SQL query, you should also suggest a relevant 'chart_type' for visualizing the data, if the user asks for a visualization (for example, if the user asks to 'show', 'display', or 'visualize' the data). The 'chart_type' can be one of the following: 'Bar', 'Pie', 'Line', or 'Null'. 
+    If the user query does not request a visualization or does not imply one, return 'chart_type' as 'Null'.
+
     User query: {user_query}
 
     Respond according to the following JSON format:
     {{
-        "sql": "SQL Query to run"
+        "sql": "SQL Query to run",
+        "chart_type": "Suggested chart type (if any)"
     }}
-
-    Ensure the response is correct JSON and can be parsed by Python json.loads.
 
     Examples:
     1. User query: "Show me the latest 5 job applications"
     Response: {{
-        "sql": "SELECT company_name, job_position, applied_date, application_status FROM applied_companies ORDER BY applied_date DESC LIMIT 5"
+        "sql": "SELECT company_name, job_position, applied_date, application_status FROM applied_companies ORDER BY applied_date DESC LIMIT 5",
+        "chart_type": "Bar"
     }}
 
     2. User query: "How many companies have I applied to?"
     Response: {{
-        "sql": "SELECT COUNT(DISTINCT company_name) AS company_count FROM applied_companies LIMIT 5"
+        "sql": "SELECT COUNT(DISTINCT company_name) AS company_count FROM applied_companies",
+        "chart_type": "Null"
     }}
 
     JSON response:
@@ -143,20 +150,75 @@ def execute_sql_query(conn, sql_query):
         logging.error(f"Error executing SQL query: {e}")
         return None, None  # Return None for both if an error occurs
 
-def visualize_sql_result(result, headers):
+def visualize_sql_result(
+    result: List[Tuple], 
+    headers: List[str], 
+    chart_type: str
+) -> Optional[pd.DataFrame]:
     """
-    Convert SQL query result into a table format and display.
+    Convert SQL query result into a visual format (table or chart).
     
-    :param result: List of tuples containing SQL query result
-    :param headers: List of strings for the table headers
-    :return: Formatted table as string (if needed)
+    Args:
+        result: List of tuples containing SQL query result
+        headers: List of strings for the table headers
+        chart_type: String indicating the type of chart (Bar, Pie, Line, or Null)
+    
+    Returns:
+        Optional[pd.DataFrame]: DataFrame if no visualization is created, None otherwise
     """
-    
     # Create a pandas DataFrame from the result
     df = pd.DataFrame(result, columns=headers)
     
-    # Return or print the DataFrame for visual representation
-    return df
+    # Handle datetime columns for visualization
+    for col in df.select_dtypes(include=['datetime64[ns]']).columns:
+        df[col] = df[col].dt.strftime('%Y-%m-%d %H:%M:%S')
+    
+    # Return early if no chart is requested
+    if chart_type == 'Null':
+        return df
+    
+    # Set up the figure
+    plt.figure(figsize=(10, 6))
+    
+    try:
+        if chart_type == 'Bar':
+            if len(df.columns) < 2:
+                raise ValueError("Bar chart requires at least two columns")
+            
+            sns.barplot(x=df.iloc[:, 0], y=df.iloc[:, 1], palette='viridis')
+            plt.title("Bar Chart Visualization")
+            plt.xticks(rotation=45, ha='right')
+            
+        elif chart_type == 'Pie':
+            if len(df.columns) < 2:
+                raise ValueError("Pie chart requires at least two columns")
+                
+            plt.pie(df.iloc[:, 1], labels=df.iloc[:, 0], 
+                   autopct='%1.1f%%', startangle=140,
+                   colors=sns.color_palette('viridis'))
+            plt.title("Pie Chart Visualization")
+            plt.axis('equal')
+            
+        elif chart_type == 'Line':
+            if len(df.columns) < 2:
+                raise ValueError("Line chart requires at least two columns")
+                
+            sns.lineplot(x=df.iloc[:, 0], y=df.iloc[:, 1],
+                        marker='o', linestyle='-', color='b')
+            plt.title("Line Chart Visualization")
+            plt.xticks(rotation=45, ha='right')
+            
+        else:
+            logging.error(f"Unknown chart type: {chart_type}")
+            return df
+        
+        plt.tight_layout()
+        return None
+        
+    except Exception as e:
+        logging.error(f"Error creating {chart_type} chart: {e}")
+        return df
+
 
 def main():
     """Main function to execute the text-to-SQL query process."""
@@ -170,20 +232,24 @@ def main():
         # User input
         user_query = input("Enter your question about the database: ")
         
-        # Generate SQL query
+        # Generate SQL query and chart type
         json_response = generate_sql_query(user_query)
         
         if json_response and 'sql' in json_response:
             sql_query = json_response['sql']
+            chart_type = json_response.get('chart_type', 'Null')  # Default to 'Null' if chart_type not provided
             
             print(f"Generated SQL query: {sql_query}")
             
             # Execute SQL query
             headers, result = execute_sql_query(conn, sql_query)
                 
-            # Visualize result
-            table = visualize_sql_result(result, headers)
-            print(table)  # Display the table
+            # Visualize result with chart_type
+            table = visualize_sql_result(result, headers, chart_type)
+            
+            # If chart_type is 'Null', display the table
+            if chart_type == 'Null':
+                print(table)
         
         else:
             print("Failed to generate SQL query.")
