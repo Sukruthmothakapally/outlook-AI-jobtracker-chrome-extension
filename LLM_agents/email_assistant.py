@@ -12,10 +12,6 @@ load_dotenv()
 
 # Get OpenAI API Key
 openai_api_key = os.getenv("OPENAI_API_KEY")
-logging.info(f"OpenAI API key: {openai_api_key}")
-
-if not openai_api_key:
-    raise ValueError("OpenAI API key not found. Make sure it is set in the .env file.")
 
 # Initialize OpenAI API
 client = openai.OpenAI(
@@ -94,12 +90,9 @@ def get_job_application_details(email_context: str):
     """
     Function to interact with GPT-4 model to extract job application details from email context.
     """
-    # Check if OpenAI API key is set
+
     if not openai_api_key:
-        logging.error("OpenAI API key is not set.")
         raise ValueError("OpenAI API key not found. Make sure it is set in the .env file.")
-    
-    logging.info("openai api:", openai_api_key)
 
     if not client:
         logging.error("OpenAI client initialization failed.")

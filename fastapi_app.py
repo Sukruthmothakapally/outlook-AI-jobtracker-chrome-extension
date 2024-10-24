@@ -12,6 +12,7 @@ import matplotlib.pyplot as plt
 import io
 from LLM_agents.vector_search_agent import perform_similarity_search, generate_openai_response, connect_to_postgres
 from LLM_agents.text_to_sql_agent import generate_sql_query, execute_sql_query, visualize_sql_result
+from LLM_agents.agent_selector_assistant import select_agent
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -134,96 +135,108 @@ async def check_url(request: URLRequest):
     finally:
         conn.close()
 
-# @app.post("/get_user_query")
-# async def get_user_query(request: UserQueryRequest):
-#     user_query = request.query
-#     logging.info(f"Received user query: {user_query}")
-
-#     # Step 1: Connect to the database
-#     conn = connect_to_postgres()
-#     if conn is None:
-#         raise HTTPException(status_code=500, detail="Unable to connect to the database.")
-
-#     try:
-#         # Step 2: Perform similarity search
-#         result = perform_similarity_search(conn, user_query)
-        
-#         if result:
-#             # Step 3: Generate a streaming response using OpenAI GPT-3.5
-#             return StreamingResponse(generate_openai_response(user_query, result), media_type="text/plain")
-#         else:
-#             return {"message": "No similar company found for the query."}
-#     except Exception as e:
-#         logging.error(f"Error in handling query: {e}")
-#         raise HTTPException(status_code=500, detail=f"Error processing the query: {e}")
-#     finally:
-#         if conn:
-#             conn.close()
-#             logging.info("Database connection closed.")
-
-
 @app.post("/get_user_query")
 async def get_user_query(request: UserQueryRequest):
     user_query = request.query
     logging.info(f"Received user query: {user_query}")
-    
-    # Step 1: Connect to the database
-    conn = connect_to_postgres()
-    if conn is None:
-        raise HTTPException(status_code=500, detail="Unable to connect to the database.")
-    
+
     try:
-        # Step 2: Generate SQL query and chart type
-        json_response = generate_sql_query(user_query)
+        agent = select_agent(user_query)
+        logging.info(f"Selected Agent is: {agent}")
         
-        if not json_response or 'sql' not in json_response:
-            return {"message": "Failed to generate SQL query or chart."}
-            
-        sql_query = json_response['sql']
-        chart_type = json_response.get('chart_type', 'Null')
+        if agent=='invalid question':
+            response = "Please ask relevant questions about a company!!!!"
+
+            return StreamingResponse(iter([response]), media_type="text/plain")
         
-        # Step 3: Execute the SQL query
-        headers, result = execute_sql_query(conn, sql_query)
-        
-        # Step 4: Process and return results
-        if chart_type == 'Null':
-            # Convert result to DataFrame and handle datetime serialization
-            table = pd.DataFrame(result, columns=headers)
+        elif agent=='vector_search_agent':
+
+            # Step 1: Connect to the database
+            conn = connect_to_postgres()
+            if conn is None:
+                raise HTTPException(status_code=500, detail="Unable to connect to the database.")
+
+            try:
+                # Step 2: Perform similarity search
+                result = perform_similarity_search(conn, user_query)
+                
+                if result:
+                    # Step 3: Generate a streaming response using OpenAI GPT-3.5
+                    return StreamingResponse(generate_openai_response(user_query, result), media_type="text/plain")
+                else:
+                    return {"message": "No similar company found for the query."}
+                
+            except Exception as e:
+                logging.error(f"Error in handling query: {e}")
+                raise HTTPException(status_code=500, detail=f"Error processing the query: {e}")
             
-            # Convert all datetime columns to ISO format strings
-            for column in table.columns:
-                if isinstance(table[column].iloc[0], (datetime, pd.Timestamp)):
-                    table[column] = table[column].apply(lambda x: x.isoformat() if x else None)
+            finally:
+                if conn:
+                    conn.close()
+                    logging.info("Database connection closed.")
+
+        elif agent=='text_to_sql_agent':
+
+            # Step 1: Connect to the database
+            conn = connect_to_postgres()
+            if conn is None:
+                raise HTTPException(status_code=500, detail="Unable to connect to the database.")
             
-            return JSONResponse(content=table.to_dict(orient='records'))
-        else:
-            # Generate visualization
-            buffer = io.BytesIO()
-            visualize_sql_result(result, headers, chart_type)
-            plt.savefig(buffer, format='png', bbox_inches='tight', dpi=300)
-            plt.close()
+            try:
+                # Step 2: Generate SQL query and chart type
+                json_response = generate_sql_query(user_query)
+                
+                if not json_response or 'sql' not in json_response:
+                    return {"message": "Failed to generate SQL query or chart."}
+                    
+                sql_query = json_response['sql']
+                chart_type = json_response.get('chart_type', 'Null')
+                
+                # Step 3: Execute the SQL query
+                headers, result = execute_sql_query(conn, sql_query)
+                
+                # Step 4: Process and return results
+                if chart_type == 'Null':
+                    # Convert result to DataFrame and handle datetime serialization
+                    table = pd.DataFrame(result, columns=headers)
+                    
+                    # Convert all datetime columns to ISO format strings
+                    for column in table.columns:
+                        if isinstance(table[column].iloc[0], (datetime, pd.Timestamp)):
+                            table[column] = table[column].apply(lambda x: x.isoformat() if x else None)
+                    
+                    return JSONResponse(content=table.to_dict(orient='records'))
+                else:
+                    # Generate visualization
+                    buffer = io.BytesIO()
+                    visualize_sql_result(result, headers, chart_type)
+                    plt.savefig(buffer, format='png', bbox_inches='tight', dpi=300)
+                    plt.close()
+                    
+                    buffer.seek(0)
+                    image_bytes = buffer.getvalue()
+                    buffer.close()
+                    
+                    return Response(
+                        content=image_bytes,
+                        media_type="image/png",
+                        headers={
+                            "Content-Disposition": "inline",
+                            "Cache-Control": "no-cache"
+                        }
+                    )
+                    
+            except Exception as e:
+                logging.error(f"Error in handling query: {e}")
+                raise HTTPException(status_code=500, detail=str(e))
             
-            buffer.seek(0)
-            image_bytes = buffer.getvalue()
-            buffer.close()
-            
-            return Response(
-                content=image_bytes,
-                media_type="image/png",
-                headers={
-                    "Content-Disposition": "inline",
-                    "Cache-Control": "no-cache"
-                }
-            )
-            
+            finally:
+                if conn:
+                    conn.close()
+                    logging.info("Database connection closed.")
+
     except Exception as e:
         logging.error(f"Error in handling query: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=f"Error processing the query: {e}")
     
-    finally:
-        if conn:
-            conn.close()
-            logging.info("Database connection closed.")
-
-
 
