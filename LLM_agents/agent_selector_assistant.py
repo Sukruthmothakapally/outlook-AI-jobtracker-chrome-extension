@@ -89,7 +89,7 @@ def select_agent(user_query: str):
     
     try:
         response = client.chat.completions.create(
-            model="gpt-3.5-turbo",
+            model="gpt-4o",
             messages=[
                 {"role": "system", "content": "You are a helpful assistant that generates SQL queries in JSON format"},
                 {"role": "user", "content": prompt}

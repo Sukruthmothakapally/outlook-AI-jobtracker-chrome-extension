@@ -272,3 +272,35 @@ body {
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
 }
+
+/* Styles for the statusDiv containing the text */
+#statusDiv {
+  background-color: black; /* Black background */
+  color: white; /* White text for contrast */
+  padding: 20px; /* Padding around the text */
+  border-radius: 10px; /* Rounded corners */
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5); /* Subtle shadow for depth */
+  font-family: Arial, sans-serif; /* Consistent font */
+  max-width: 600px; /* Maximum width of the box */
+  margin: 20px auto; /* Centering the box */
+  overflow: hidden; /* Ensures text doesn't overflow the box */
+  white-space: pre-wrap; /* Maintain whitespace formatting */
+}
+
+/* Optional: Additional styles for the text */
+#statusDiv span {
+  font-size: 20px; /* Font size for text */
+  line-height: 1.6; /* Line height for better readability */
+  display: inline-block; /* Ensure proper spacing for each character */
+  transition: opacity 0.3s; /* Smooth transition for text appearance */
+}
+
+/* Optional: Fade-in effect for newly added characters */
+#statusDiv span {
+  opacity: 0; /* Start as invisible */
+}
+
+#statusDiv span.show {
+  opacity: 1; /* Fade in to visible */
+}
+

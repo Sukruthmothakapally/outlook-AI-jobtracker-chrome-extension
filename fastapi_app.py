@@ -97,7 +97,7 @@ async def check_url(request: URLRequest):
     try:
         with conn.cursor() as cursor:
             query = """
-            SELECT company_name, job_position, applied_date 
+            SELECT company_name, job_position, applied_date, application_status 
             FROM applied_companies 
             WHERE company_website = %s
             ORDER BY applied_date DESC;
@@ -119,7 +119,8 @@ async def check_url(request: URLRequest):
                 formatted_date = format_applied_date(row[2])  # Convert the date to a readable format
                 response_data["applications"].append({
                     "job_position": row[1],
-                    "applied_date": formatted_date
+                    "applied_date": formatted_date,
+                    "application_status": row[3]
                 })
 
             return response_data

@@ -117,8 +117,20 @@ document.addEventListener('DOMContentLoaded', function () {
                     const textDecoder = new TextDecoder('utf-8');
                     const text = textDecoder.decode(arrayBuffer);
 
+                    // Create the response box container first
+                    const responseBox = document.createElement('div');
+                    responseBox.style.backgroundColor = '#000000';
+                    responseBox.style.border = '2px solid #333333';
+                    responseBox.style.borderRadius = '8px';
+                    responseBox.style.padding = '20px';
+                    responseBox.style.marginTop = '20px';
+                    responseBox.style.width = 'fit-content';
+                    responseBox.style.maxWidth = '100%';
+                    responseBox.style.boxShadow = '0 4px 8px rgba(0, 0, 0, 0.2)';
+                    statusDiv.appendChild(responseBox);
+
                     // Use typeWriter function to display text in typing effect
-                    await typeWriter(text);
+                    await typeWriter(text, responseBox);
                 } else {
                     // Fallback in case of unrecognized content type
                     statusDiv.innerHTML = '<div class="no-info">Unexpected response type</div>';
@@ -132,15 +144,49 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 
-    // TypeWriter function for streaming text with proper spacing
-    function typeWriter(text, index = 0) {
+    function typeWriter(text, container, index = 0, processedText = null) {
         return new Promise(resolve => {
-            if (index < text.length) {
-                const char = text.charAt(index);
-                // Check if the character is a space, and add extra space if it is
-                const displayChar = char === ' ' ? '&nbsp;' : char; // Use &nbsp; for space in HTML
-                statusDiv.innerHTML += `<span style="font-size: 20px; font-family: Arial, sans-serif; line-height: 1.6; color: #333; display: inline-block; margin-top: 10px;">${displayChar}</span>`;
-                setTimeout(() => typeWriter(text, index + 1).then(resolve), 20);
+            // Process text only on first run
+            if (index === 0) {
+                // Create text element with proper styling
+                const textElement = document.createElement('div');
+                textElement.style.color = '#ffffff';
+                textElement.style.fontSize = '16px';
+                textElement.style.fontFamily = 'Arial, sans-serif';
+                textElement.style.lineHeight = '1.5';
+                textElement.style.whiteSpace = 'pre-wrap';
+                textElement.style.wordBreak = 'keep-all';
+                textElement.id = 'typewriter-text';
+                container.appendChild(textElement);
+    
+                // Process text for line breaks
+                const words = text.split(' ');
+                let currentLine = '';
+                processedText = '';
+    
+                words.forEach((word, i) => {
+                    if (currentLine.length + word.length + 1 <= 80) {
+                        currentLine += (currentLine.length === 0 ? '' : ' ') + word;
+                    } else {
+                        processedText += currentLine + '\n';
+                        currentLine = word;
+                    }
+                    
+                    if (i === words.length - 1) {
+                        processedText += currentLine;
+                    }
+                });
+            }
+    
+            if (index < processedText.length) {
+                const textElement = container.querySelector('#typewriter-text');
+                const currentChar = processedText.charAt(index);
+                
+                textElement.textContent += currentChar;
+                
+                setTimeout(() => {
+                    typeWriter(text, container, index + 1, processedText).then(resolve);
+                }, 20);
             } else {
                 resolve();
             }
@@ -159,6 +205,7 @@ document.addEventListener('DOMContentLoaded', function () {
                           <th>Company Website</th>
                           <th>Job Position</th>
                           <th>Applied Date</th>
+                          <th>Application Status</th>
                         </tr>`;
                     
                     jobData.applications.forEach(app => {
@@ -167,12 +214,11 @@ document.addEventListener('DOMContentLoaded', function () {
                             <td>${jobData.company_website || 'N/A'}</td>
                             <td>${app.job_position}</td>
                             <td>${app.applied_date}</td>
+                            <td>${app.application_status}</td>
                           </tr>`;
                     });
                     tableHTML += '</table>';
                     statusDiv.innerHTML = tableHTML;
-                    // Ensure the pop-up or relevant UI element is displayed
-                    // Optionally, show the input form based on user action
                 } else if (jobData.message.includes('Not yet applied')) {
                     statusDiv.innerHTML = `<div class="no-info">Not yet applied to ${jobData.company_website || 'the company'}</div>`;
                 } else {
