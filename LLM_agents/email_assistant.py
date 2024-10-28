@@ -109,7 +109,7 @@ def get_job_application_details(email_context: str):
                 {"role": "system", "content": "You are a helpful assistant."},
                 {"role": "user", "content": prompt}
             ],
-            max_tokens=500,
+            max_tokens=800,
             temperature=0.1,
             response_format={"type": "json_object"}
         )
