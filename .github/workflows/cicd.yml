@@ -45,5 +45,5 @@ jobs:
           nohup python prefect_flow.py &
 
           # Start FastAPI
-          nohup python -m uvicorn fastapi_app --host 0.0.0.0 --port 8000 --reload &
+          nohup python -m uvicorn fastapi_app:app --host 0.0.0.0 --port 8000 --reload &
         EOF

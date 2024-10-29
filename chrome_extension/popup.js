@@ -43,7 +43,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 // Create and display the loading logo
                 statusDiv.innerHTML = '<div class="loading"><img src="batman_logo.png" alt="Loading..."></div>';
                 
-                const response = await fetch('http://54.183.74.135:8000/get_user_query', {
+                const response = await fetch('http://54.176.180.245:8000/get_user_query', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
