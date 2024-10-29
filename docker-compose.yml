@@ -1,0 +1,22 @@
+version: '3.8'
+
+services:
+  prefect-server:
+    build:
+      context: .
+      dockerfile: Dockerfile.prefect
+    container_name: prefect-server
+    environment:
+      - PREFECT_API_URL=http://54.176.180.245:4200  
+    ports:
+      - "4200:4200"  
+
+  fastapi-app:
+    build:
+      context: .
+      dockerfile: Dockerfile.fastapi
+    container_name: fastapi-app
+    depends_on:
+      - prefect-server
+    ports:
+      - "8000:8000"  

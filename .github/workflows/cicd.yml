@@ -20,11 +20,11 @@ jobs:
 
     - name: Add EC2 to known_hosts
       run: |
-        ssh-keyscan -H 54.183.74.135 >> ~/.ssh/known_hosts
+        ssh-keyscan -H 54.176.180.245 >> ~/.ssh/known_hosts
 
     - name: SSH Commands to Deploy prefect and fastapi
       run: |
-        ssh -v ubuntu@54.183.74.135 << 'EOF'
+        ssh -v ubuntu@54.176.180.245 << 'EOF'
           # Navigate to your app directory
           cd outlook-AI-jobtracker-chrome-extension/
 
@@ -35,7 +35,7 @@ jobs:
           source .venv/bin/activate
 
           # Export the Prefect API
-          export PREFECT_API_URL=http://54.183.74.135:4200
+          export PREFECT_API_URL=http://54.176.180.245:4200
 
           # Start the Prefect server, allowing access from any IP
           nohup prefect server start --host 0.0.0.0 &
