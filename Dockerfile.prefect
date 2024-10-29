@@ -11,7 +11,7 @@ COPY . .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Set environment variable for Prefect API URL
-ENV PREFECT_API_URL=http://54.176.180.245:4200
+ENV PREFECT_API_URL=http://54.176.180.245:4200/api
 
 # Expose the Prefect server port
 EXPOSE 4200

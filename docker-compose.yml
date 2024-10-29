@@ -6,10 +6,10 @@ services:
       context: .
       dockerfile: Dockerfile.prefect
     container_name: prefect-server
-    environment:
-      - PREFECT_API_URL=http://54.176.180.245:4200  
+    env_file:
+      - .env
     ports:
-      - "4200:4200"  
+      - "4200:4200"
 
   fastapi-app:
     build:
@@ -18,5 +18,8 @@ services:
     container_name: fastapi-app
     depends_on:
       - prefect-server
+    env_file:
+      - .env
     ports:
-      - "8000:8000"  
+      - "8000:8000"
+
