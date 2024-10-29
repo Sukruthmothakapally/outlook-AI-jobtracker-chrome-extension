@@ -9,7 +9,7 @@ function checkCompanyWebsite(url) {
   const domain = new URL(url).hostname.replace(/^www\./, '');
   console.log(`Checking domain: ${domain}`);
 
-  fetch('http://localhost:8000/check-url', {
+  fetch('http://54.183.74.135:8000/check-url', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json'
