@@ -1,5 +1,6 @@
-from fastapi import FastAPI, HTTPException, Request
-from fastapi.responses import StreamingResponse,JSONResponse, FileResponse, Response
+from fastapi import FastAPI, HTTPException
+from fastapi.responses import StreamingResponse,JSONResponse, Response
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from urllib.parse import urlparse
 import psycopg2
@@ -27,6 +28,14 @@ DB_PASSWORD = os.getenv('DB_PASSWORD')
 logging.info(f"DB Connection - Host: {DB_HOST_NAME}, DB: {MAINTENANCE_DB}, Username: {DB_USERNAME}")
 
 app = FastAPI()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"], 
+    allow_credentials=True,
+    allow_methods=["*"], 
+    allow_headers=["*"],   
+)
 
 class URLRequest(BaseModel):
     url: str
