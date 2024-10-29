@@ -1,0 +1,45 @@
+name: Deploy to EC2
+
+on:
+  push:
+    branches:
+      - develop
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Set up SSH
+      uses: webfactory/ssh-agent@v0.5.3
+      with:
+        ssh-private-key: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
+
+    - name: SSH Commands to Deploy prefect and fastapi
+      run: |
+        ssh ubuntu@54.183.74.135 << 'EOF'
+          # Navigate to your app directory
+          cd outlook-AI-jobtracker-chrome-extension/
+
+          # Pull the latest changes
+          git pull origin develop
+
+          # Activate the virtual environment
+          source .venv/bin/activate
+
+          # Export the Prefect API
+          export PREFECT_API_URL=http://54.183.74.135:4200
+
+          # Start the Prefect server, allowing access from any IP
+          nohup prefect server start --host 0.0.0.0 &
+
+          # Run the Prefect flow
+          cd prefect/
+          nohup python prefect_flow.py &
+
+          # Start FastAPI
+          nohup python -m uvicorn fastapi_app --host 0.0.0.0 --port 8000 --reload &
+        EOF
