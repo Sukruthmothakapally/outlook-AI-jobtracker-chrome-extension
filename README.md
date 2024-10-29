@@ -30,4 +30,4 @@ The **AI-Powered Outlook Job Tracker** is a Chrome extension integrated with a F
 - **CI/CD**: GitHub Actions for continuous integration and deployment
 
 ## Work in Progress
-This project has been completed and currently working on Continuous Integration and Continuous Deployment (CI/CD). Stay tuned for updates!
+This project has been completed and currently working on Continuous Integration and Continuous Deployment (CI/CD) using github actions. Stay tuned for updates!
