@@ -24,7 +24,7 @@ jobs:
 
     - name: SSH Commands to Deploy prefect and fastapi
       run: |
-        ssh ubuntu@54.183.74.135 << 'EOF'
+        ssh -v ubuntu@54.183.74.135 << 'EOF'
           # Navigate to your app directory
           cd outlook-AI-jobtracker-chrome-extension/
 
