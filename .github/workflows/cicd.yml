@@ -22,35 +22,35 @@ jobs:
       run: |
         ssh-keyscan -H 54.176.180.245 >> ~/.ssh/known_hosts
 
-        - name: Redeploy and rebuild Docker
-        run: |
-          ssh -v ubuntu@54.176.180.245 << 'EOF'
-            # Navigate to your app directory
-            echo "Navigating to app directory..."
-            cd outlook-AI-jobtracker-chrome-extension/
-      
-            # Pull the latest changes
-            echo "Pulling the latest changes from the develop branch..."
-            git pull origin develop
-      
-            # Activate the virtual environment
-            echo "Activating virtual environment..."
-            source .venv/bin/activate
-      
-            # Stop running containers
-            echo "Stopping any running Docker containers..."
-            docker compose down
-      
-            # Build Docker images without cache
-            echo "Building Docker images with --no-cache..."
-            docker compose build --no-cache
-      
-            # Start Docker containers with force recreate
-            echo "Starting Docker containers with --force-recreate..."
-            docker compose up -d --force-recreate
-      
-            # Clean up unused Docker images
-            echo "Cleaning up unused Docker images..."
-            docker image prune -f
-      
-          EOF
+    - name: Redeploy and rebuild Docker
+      run: |
+        ssh -v ubuntu@54.176.180.245 << 'EOF'
+          # Navigate to your app directory
+          echo "Navigating to app directory..."
+          cd outlook-AI-jobtracker-chrome-extension/
+    
+          # Pull the latest changes
+          echo "Pulling the latest changes from the develop branch..."
+          git pull origin develop
+    
+          # Activate the virtual environment
+          echo "Activating virtual environment..."
+          source .venv/bin/activate
+    
+          # Stop running containers
+          echo "Stopping any running Docker containers..."
+          docker compose down
+    
+          # Build Docker images without cache
+          echo "Building Docker images with --no-cache..."
+          docker compose build --no-cache
+    
+          # Start Docker containers with force recreate
+          echo "Starting Docker containers with --force-recreate..."
+          docker compose up -d --force-recreate
+    
+          # Clean up unused Docker images
+          echo "Cleaning up unused Docker images..."
+          docker image prune -f
+    
+        EOF
