@@ -16,8 +16,6 @@ services:
       context: .
       dockerfile: Dockerfile.fastapi
     container_name: fastapi-app
-    depends_on:
-      - prefect-server
     env_file:
       - .env
     ports:
