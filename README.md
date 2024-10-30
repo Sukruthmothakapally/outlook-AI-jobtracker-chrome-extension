@@ -1,12 +1,10 @@
 # AI-Powered Outlook Job Tracker
 
-# AI-Powered Outlook Job Tracker
-
 ![Language](https://img.shields.io/badge/Language-Python%203.9+-blue)
 ![Backend](https://img.shields.io/badge/Backend-FastAPI-009688)
 ![Frontend](https://img.shields.io/badge/Frontend-HTML%2FCSS%2FJS-yellow)
 ![Database](https://img.shields.io/badge/Database-PostgreSQL-336791)
-![AI](https://img.shields.io/badge/AI-OpenAI%20GPT--4-00A67E)
+![AI](https://img.shields.io/badge/AI-OpenAI%20GPT--4o-00A67E)
 ![Orchestration](https://img.shields.io/badge/Orchestration-Prefect-4148C1)
 ![Containerization](https://img.shields.io/badge/Containerization-Docker-2496ED)
 ![Cloud](https://img.shields.io/badge/Cloud-AWS-FF9900)
@@ -19,7 +17,7 @@
 - **Framework**: FastAPI
 - **Language**: Python
 - **Database**: PostgreSQL with pgvector extension
-- **AI Model**: OpenAI GPT-4
+- **AI Model**: OpenAI GPT-4o
 - **Data Orchestration**: Prefect
 - **Containerization**: Docker & Docker Compose
 
