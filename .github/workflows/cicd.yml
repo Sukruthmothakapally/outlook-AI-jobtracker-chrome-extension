@@ -22,7 +22,7 @@ jobs:
       run: |
         ssh-keyscan -H 54.176.180.245 >> ~/.ssh/known_hosts
 
-    - name: SSH Commands to Deploy prefect and fastapi
+    - name: Git Pull
       run: |
         ssh -v ubuntu@54.176.180.245 << 'EOF'
           # Navigate to your app directory
@@ -33,17 +33,3 @@ jobs:
 
           # Activate the virtual environment
           source .venv/bin/activate
-
-          # Export the Prefect API
-          export PREFECT_API_URL=http://54.176.180.245:4200
-
-          # Start the Prefect server, allowing access from any IP
-          nohup prefect server start --host 0.0.0.0 &
-
-          # Run the Prefect flow
-          cd prefect/
-          nohup python prefect_flow.py &
-
-          # Start FastAPI
-          nohup python -m uvicorn fastapi_app:app --host 0.0.0.0 --port 8000 --reload &
-        EOF
