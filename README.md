@@ -33,6 +33,10 @@
 ## Overview
 The AI-Powered Outlook Job Tracker is a sophisticated Chrome extension integrated with a FastAPI backend that helps users track their job applications intelligently. The system automatically processes Outlook emails to maintain application records and provides real-time notifications when users visit companies they've previously applied to. The solution leverages advanced AI capabilities for natural language querying and data visualization.
 
+## System Architecture
+![System Architecture Diagram](architecture_diagram/architecture_diagram.png)
+*High-level architecture showing system components and data flow*
+
 ## Architecture
 The system follows a microservices architecture with the following components:
 
