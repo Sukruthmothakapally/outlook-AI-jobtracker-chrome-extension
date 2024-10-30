@@ -11,6 +11,7 @@
 ![Containerization](https://img.shields.io/badge/Containerization-Docker-2496ED)
 ![Cloud](https://img.shields.io/badge/Cloud-AWS-FF9900)
 ![Version Control](https://img.shields.io/badge/Version%20Control-Git-F05032)
+![CI/CD](https://img.shields.io/badge/CI%2FCD-GitHub%20Actions-2088FF)
 
 ## Tech Stack
 
