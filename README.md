@@ -1,10 +1,16 @@
 # AI-Powered Outlook Job Tracker
 
-![Tech Stack](https://img.shields.io/badge/Python-FastAPI-blue)
-![Tech Stack](https://img.shields.io/badge/Database-PostgreSQL-blue)
-![Tech Stack](https://img.shields.io/badge/AI-OpenAI%20GPT--4-green)
-![Tech Stack](https://img.shields.io/badge/Deployment-AWS-orange)
-![Tech Stack](https://img.shields.io/badge/Status-Completed-brightgreen)
+# AI-Powered Outlook Job Tracker
+
+![Language](https://img.shields.io/badge/Language-Python%203.9+-blue)
+![Backend](https://img.shields.io/badge/Backend-FastAPI-009688)
+![Frontend](https://img.shields.io/badge/Frontend-HTML%2FCSS%2FJS-yellow)
+![Database](https://img.shields.io/badge/Database-PostgreSQL-336791)
+![AI](https://img.shields.io/badge/AI-OpenAI%20GPT--4-00A67E)
+![Orchestration](https://img.shields.io/badge/Orchestration-Prefect-4148C1)
+![Containerization](https://img.shields.io/badge/Containerization-Docker-2496ED)
+![Cloud](https://img.shields.io/badge/Cloud-AWS-FF9900)
+![Version Control](https://img.shields.io/badge/Version%20Control-Git-F05032)
 
 ## Tech Stack
 
