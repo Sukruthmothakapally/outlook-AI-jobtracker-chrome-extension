@@ -101,13 +101,14 @@ async def generate_openai_response(user_query: str, company_details) -> AsyncGen
             - Company Website: {company_website}
             - Job Position: {job_position}
             - Applied Date: {applied_date}
-            - Application Status: {application_status}
+            - Application Status:
+              {application_status}
 
             Here are the rules to guide your response:
 
             1. **If the user's query contains the company name '{company_name}',** provide a concise and accurate response based **only** on the above context. 
 
-            2. **If the company mentioned in the user's query is different from '{company_name}',** inform them that they haven't applied to that company yet.
+            2. **If the company name mentioned in the user's query is different from '{company_name}',** inform them that they haven't applied to that company yet.
             For example: If the user's query contains "Company X" and the company name in context is "Company Y". Your response would be: "You haven't applied to company X yet.
 
             3. **If the user's query doesn't contain any company name,** inform them that their query is irrelevant and encourage them to ask a question about a specific company.
@@ -120,7 +121,7 @@ async def generate_openai_response(user_query: str, company_details) -> AsyncGen
 
     try:
         stream = await client.chat.completions.create(
-            model="gpt-3.5-turbo",
+            model="gpt-4o",
             messages=[
                 {"role": "system", "content": "You are a helpful assistant."},
                 {"role": "user", "content": prompt}
