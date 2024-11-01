@@ -11,7 +11,7 @@
 ![Version Control](https://img.shields.io/badge/Version%20Control-Git-F05032)
 ![CI/CD](https://img.shields.io/badge/CI%2FCD-GitHub%20Actions-2088FF)
 
-## [Video Demo link](https://www.youtube.com/watch?v=RJGbdhfayPg&ab_channel=sukruthKM)
+## 🎥 [Video Demo link](https://www.youtube.com/watch?v=RJGbdhfayPg&ab_channel=sukruthKM)
 
 ## Tech Stack
 
